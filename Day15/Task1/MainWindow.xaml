@@ -1,0 +1,131 @@
+﻿<Window x:Class="Task1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Task1.ViewModels"
+        mc:Ignorable="d"
+        Title="Task Manager"
+        Height="600"
+        Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F7FAFC">
+
+    <Window.DataContext>
+        <vm:TaskManagerViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <DataTemplate x:Key="TaskTemplate">
+            <Border Margin="6"
+                    Padding="12"
+                    CornerRadius="10"
+                    Background="White"
+                    BorderBrush="#E2E8F0"
+                    BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="130" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2D3748"/>
+                        <TextBlock Text="{Binding CategoryName}"
+                                   FontSize="12"
+                                   Foreground="#718096"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Padding="10,4"
+                            CornerRadius="12"
+                            Background="{Binding StatusBrush}">
+                        <TextBlock Text="{Binding Status}"
+                                   Foreground="White"
+                                   FontWeight="Bold"/>
+                    </Border>
+
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding DeadlineText}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Foreground="#4A5568"
+                               FontWeight="SemiBold"/>
+
+                    <Button Grid.Column="3"
+                            Content="Удалить"
+                            Width="90"
+                            Height="30"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Background="#F56565"
+                            Foreground="White"
+                            BorderThickness="0"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Верхняя панель -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="Загрузить"
+                    Width="110"
+                    Height="35"
+                    Margin="0,0,10,0"
+                    Command="{Binding LoadTasksCommand}"
+                    Background="#4299E1"
+                    Foreground="White"
+                    BorderThickness="0"/>
+
+            <Button Content="Добавить задачу"
+                    Width="140"
+                    Height="35"
+                    Command="{Binding AddTaskCommand}"
+                    Background="#48BB78"
+                    Foreground="White"
+                    BorderThickness="0"/>
+        </StackPanel>
+
+        <!-- Анимация загрузки -->
+        <Border Grid.Row="1"
+                Margin="0,0,0,10"
+                Padding="10"
+                CornerRadius="8"
+                Background="#EBF8FF"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Text="{Binding LoadingText}"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Foreground="#2B6CB0"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- ListView -->
+        <ListView Grid.Row="2"
+                  ItemsSource="{Binding Tasks}"
+                  SelectedItem="{Binding SelectedTask, Mode=TwoWay}"
+                  ItemTemplate="{StaticResource TaskTemplate}"
+                  Background="#F7FAFC"
+                  BorderThickness="0">
+        </ListView>
+    </Grid>
+</Window>
