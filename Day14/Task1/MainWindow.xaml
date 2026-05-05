@@ -1,0 +1,420 @@
+﻿<Window x:Class="Task1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Task1.ViewModels"
+        Title="Task Manager" Height="700" Width="1060"
+        Background="#F0F4F8">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTaskCommand}"/>
+        <KeyBinding Key="E" Modifiers="Ctrl" Command="{Binding EditTaskCommand}"/>
+        <KeyBinding Key="D" Modifiers="Ctrl" Command="{Binding DeleteTaskCommand}"/>
+    </Window.InputBindings>
+
+    <Window.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ControlTemplate для кнопки смены статуса -->
+        <ControlTemplate x:Key="StatusButtonTemplate" TargetType="Button">
+            <Border x:Name="Bd" Background="#4299E1"
+                    CornerRadius="14" Padding="12,4" Cursor="Hand">
+                <TextBlock Text="{TemplateBinding Content}"
+                           Foreground="White" FontSize="11"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Bd" Property="Background" Value="#2B6CB0"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter TargetName="Bd" Property="Background" Value="#1A365D"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding Status}" Value="Выполнено">
+                    <Setter TargetName="Bd" Property="Background" Value="#48BB78"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Отложено">
+                    <Setter TargetName="Bd" Property="Background" Value="#9F7AEA"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="В работе">
+                    <Setter TargetName="Bd" Property="Background" Value="#4299E1"/>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- DataTemplate для отображения задачи в ListBox -->
+        <DataTemplate x:Key="TaskItemTemplate">
+            <Border Padding="14,12"
+                    BorderBrush="#EDF2F7"
+                    BorderThickness="0,0,0,1"
+                    Background="Transparent">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="115"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="120"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ID -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Id}"
+                               Foreground="#A0AEC0"
+                               VerticalAlignment="Center"/>
+
+                    <!-- Название (TwoWay) + описание -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBox BorderThickness="0"
+                                 Background="Transparent"
+                                 FontSize="14" FontWeight="SemiBold"
+                                 Foreground="#2D3748" Padding="0"
+                                 Text="{Binding Title, Mode=TwoWay,
+                                        UpdateSourceTrigger=LostFocus}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCompleted}"
+                                                     Value="True">
+                                            <Setter Property="TextDecorations"
+                                                    Value="Strikethrough"/>
+                                            <Setter Property="Foreground"
+                                                    Value="#A0AEC0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TextBlock Text="{Binding Description}"
+                                   Foreground="#A0AEC0" FontSize="11"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <!-- Приоритет -->
+                    <Border Grid.Column="2" CornerRadius="12"
+                            Padding="10,4" HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{Binding PriorityColor}">
+                        <TextBlock Text="{Binding Priority}"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#4A5568"/>
+                    </Border>
+
+                    <!-- Статус — OneWay Label -->
+                    <Border Grid.Column="3" CornerRadius="12"
+                            Padding="10,4" HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{Binding StatusColor}">
+                        <Label Content="{Binding Status, Mode=OneWay}"
+                               Padding="0" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{Binding StatusTextColor, Mode=OneWay}"/>
+                    </Border>
+
+                    <!-- Дедлайн — OneWay -->
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="📅" FontSize="12"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding DeadlineText, Mode=OneWay}"
+                                   FontSize="11" Foreground="#718096"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Кнопка смены статуса — ControlTemplate -->
+                    <Button Grid.Column="5"
+                            Content="→ Следующий"
+                            Template="{StaticResource StatusButtonTemplate}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Command="{Binding DataContext.ChangeStatusCommand,
+                                      RelativeSource={RelativeSource
+                                      AncestorType=Window}}"
+                            CommandParameter="{Binding}"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Стиль кнопок ToolBar -->
+        <Style x:Key="ToolBarBtn" TargetType="Button">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{TemplateBinding Tag}"
+                                           FontSize="13" Margin="0,0,6,0"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}"
+                                           FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="65"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== МЕНЮ ===== -->
+        <Menu Grid.Row="0" Background="#2D3748"
+              Foreground="White" FontSize="13">
+            <Menu.Resources>
+                <Style TargetType="MenuItem">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#2D3748"/>
+                </Style>
+            </Menu.Resources>
+            <MenuItem Header="Файл">
+                <MenuItem Header="Новая задача"
+                          Command="{Binding AddTaskCommand}"
+                          InputGestureText="Ctrl+N"/>
+                <Separator/>
+                <MenuItem Header="Выход"
+                          Command="{Binding ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="Задачи">
+                <MenuItem Header="Создать"
+                          Command="{Binding AddTaskCommand}"
+                          InputGestureText="Ctrl+N"/>
+                <MenuItem Header="Редактировать"
+                          Command="{Binding EditTaskCommand}"
+                          InputGestureText="Ctrl+E"/>
+                <MenuItem Header="Удалить"
+                          Command="{Binding DeleteTaskCommand}"
+                          InputGestureText="Ctrl+D"/>
+                <Separator/>
+                <MenuItem Header="Все задачи"       Click="ShowAll_Click"/>
+                <MenuItem Header="В работе"         Click="ShowInProgress_Click"/>
+                <MenuItem Header="Выполненные"      Click="ShowDone_Click"/>
+                <MenuItem Header="Отложенные"       Click="ShowPostponed_Click"/>
+            </MenuItem>
+            <MenuItem Header="Помощь">
+                <MenuItem Header="О программе"
+                          Command="{Binding AboutCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- ===== TOOLBAR ===== -->
+        <ToolBar Grid.Row="1" Background="#EDF2F7" Height="48">
+            <Button Style="{StaticResource ToolBarBtn}"
+                    Tag="＋" Content="Создать"
+                    Background="#48BB78" Margin="4,0"
+                    Command="{Binding AddTaskCommand}"
+                    ToolTip="Создать задачу (Ctrl+N)"/>
+
+            <Button Style="{StaticResource ToolBarBtn}"
+                    Tag="✏" Content="Изменить"
+                    Background="#4299E1" Margin="4,0"
+                    Command="{Binding EditTaskCommand}"
+                    ToolTip="Редактировать (Ctrl+E)"/>
+
+            <Button Style="{StaticResource ToolBarBtn}"
+                    Tag="🗑" Content="Удалить"
+                    Background="#FC8181" Margin="4,0"
+                    Command="{Binding DeleteTaskCommand}"
+                    ToolTip="Удалить (Ctrl+D)"/>
+
+            <Separator Margin="8,0"/>
+
+            <TextBlock Text="Статус:" VerticalAlignment="Center"
+                       Foreground="#4A5568" Margin="0,0,6,0"/>
+            <ComboBox x:Name="FilterComboBox" Width="140" Height="30"
+                      SelectionChanged="FilterComboBox_SelectionChanged">
+                <ComboBoxItem Content="Все"       IsSelected="True"/>
+                <ComboBoxItem Content="В работе"/>
+                <ComboBoxItem Content="Выполнено"/>
+                <ComboBoxItem Content="Отложено"/>
+            </ComboBox>
+
+            <Separator Margin="8,0"/>
+
+            <TextBlock Text="Поиск:" VerticalAlignment="Center"
+                       Foreground="#4A5568" Margin="0,0,6,0"/>
+            <TextBox Width="180" Height="30" Padding="8,0"
+                     VerticalContentAlignment="Center" FontSize="13"
+                     Text="{Binding SearchText, Mode=TwoWay,
+                            UpdateSourceTrigger=PropertyChanged}"/>
+        </ToolBar>
+
+        <!-- ===== ЗАГОЛОВОК ===== -->
+        <Border Grid.Row="2" Background="#2D3748">
+            <StackPanel VerticalAlignment="Center" Margin="20,0">
+                <TextBlock Text="📋 Task Manager"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Text="DataBinding · ObservableCollection · DataTemplates"
+                           FontSize="11" Foreground="#A0AEC0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== ПАНЕЛЬ БЫСТРОГО РЕДАКТИРОВАНИЯ (TwoWay) ===== -->
+        <Border Grid.Row="3"
+                Background="#FFFBEB"
+                BorderBrush="#F6E05E"
+                BorderThickness="0,0,0,2"
+                Padding="16,10"
+                Visibility="{Binding HasSelectedTask,
+                             Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="260"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="✏ Быстрое редактирование:"
+                           Foreground="#975A16" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                <!-- TwoWay — название выбранной задачи -->
+                <TextBox Grid.Column="1"
+                         Height="32" Padding="8,0"
+                         VerticalContentAlignment="Center"
+                         FontSize="13" BorderBrush="#F6E05E"
+                         Text="{Binding SelectedTask.Title,
+                                Mode=TwoWay,
+                                UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="  Дедлайн:"
+                           Foreground="#975A16" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                <!-- TwoWay — дедлайн выбранной задачи -->
+                <DatePicker Grid.Column="3" Height="32" FontSize="13"
+                            SelectedDate="{Binding SelectedTask.Deadline,
+                                           Mode=TwoWay}"/>
+
+                <!-- OneWay — статус выбранной задачи -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="Статус: "
+                               Foreground="#975A16" FontWeight="SemiBold"/>
+                    <Label Content="{Binding SelectedTask.Status, Mode=OneWay}"
+                           Padding="0" FontWeight="Bold"
+                           Foreground="#C05621"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== СПИСОК ЗАДАЧ ===== -->
+        <Grid Grid.Row="4" Margin="16,10,16,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Заголовки колонок -->
+            <Border Grid.Row="0" Background="#EDF2F7"
+                    CornerRadius="6,6,0,0" Padding="14,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="115"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="120"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="#"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                    <TextBlock Grid.Column="1" Text="Задача"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                    <TextBlock Grid.Column="2" Text="Приоритет"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                    <TextBlock Grid.Column="3" Text="Статус"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                    <TextBlock Grid.Column="4" Text="Дедлайн"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                    <TextBlock Grid.Column="5" Text="Действие"
+                               FontWeight="SemiBold" Foreground="#4A5568"/>
+                </Grid>
+            </Border>
+
+            <!-- ListBox с DataTemplate -->
+            <ListBox Grid.Row="1"
+                     x:Name="TasksListBox"
+                     ItemsSource="{Binding FilteredTasks}"
+                     SelectedItem="{Binding SelectedTask, Mode=TwoWay}"
+                     ItemTemplate="{StaticResource TaskItemTemplate}"
+                     BorderThickness="1" BorderBrush="#E2E8F0"
+                     Background="White"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="TasksListBox_MouseDoubleClick">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="HorizontalContentAlignment"
+                                Value="Stretch"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#EBF8FF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F7FAFC"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+        </Grid>
+
+        <!-- ===== СТАТУСНАЯ СТРОКА (OneWay) ===== -->
+        <Border Grid.Row="5" Background="#2D3748" Padding="16,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage, Mode=OneWay}"
+                           Foreground="#A0AEC0"
+                           VerticalAlignment="Center" FontSize="12"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding TotalCount, Mode=OneWay}"
+                           Foreground="#A0AEC0"
+                           VerticalAlignment="Center" FontSize="12"
+                           Margin="0,0,16,0"/>
+                <TextBlock Grid.Column="2"
+                           Text="{Binding InProgressCount, Mode=OneWay}"
+                           Foreground="#63B3ED"
+                           VerticalAlignment="Center" FontSize="12"
+                           Margin="0,0,16,0"/>
+                <TextBlock Grid.Column="3"
+                           Text="{Binding DoneCount, Mode=OneWay}"
+                           Foreground="#68D391"
+                           VerticalAlignment="Center" FontSize="12"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
