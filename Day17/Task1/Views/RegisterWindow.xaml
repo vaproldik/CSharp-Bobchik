@@ -1,0 +1,84 @@
+﻿<Window x:Class="Task1.RegisterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Регистрация"
+        Height="474" Width="420"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#F7FAFC">
+
+    <Grid Margin="40">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0"
+                   Text="Регистрация"
+                   FontSize="22" FontWeight="Bold"
+                   Foreground="#2D3748"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <!-- Имя пользователя -->
+        <TextBlock Grid.Row="1"
+                   Text="Имя пользователя *"
+                   Foreground="#4A5568" FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+        <TextBox Grid.Row="2"
+                 x:Name="UsernameBox"
+                 Height="38" Padding="10,0"
+                 VerticalContentAlignment="Center"
+                 FontSize="14" BorderBrush="#CBD5E0"
+                 Margin="0,0,0,12"/>
+
+        <!-- Отображаемое имя -->
+        <TextBlock Grid.Row="3"
+                   Text="Отображаемое имя"
+                   Foreground="#4A5568" FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+        <TextBox Grid.Row="4"
+                 x:Name="DisplayNameBox"
+                 Height="38" Padding="10,0"
+                 VerticalContentAlignment="Center"
+                 FontSize="14" BorderBrush="#CBD5E0"
+                 Margin="0,0,0,12"/>
+
+        <!-- Пароль -->
+        <TextBlock Grid.Row="5"
+                   Text="Пароль *"
+                   Foreground="#4A5568" FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+        <PasswordBox Grid.Row="6"
+                     x:Name="PwdBox"
+                     Height="38" Padding="10,0"
+                     FontSize="14" BorderBrush="#CBD5E0"
+                     Margin="0,0,0,20"/>
+
+        <!-- Кнопка -->
+        <Button Grid.Row="7"
+                Content="Зарегистрироваться"
+                Height="38" FontSize="14"
+                Background="#48BB78"
+                Foreground="White"
+                BorderThickness="0"
+                Cursor="Hand"
+                Margin="0,0,0,10"
+                Click="RegisterButton_Click"/>
+
+        <!-- Сообщение -->
+        <TextBlock Grid.Row="8"
+                   x:Name="MessageText"
+                   FontSize="13"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"/>
+    </Grid>
+</Window>
