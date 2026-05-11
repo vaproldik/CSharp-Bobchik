@@ -1,0 +1,53 @@
+﻿@model List<ExpenseTracker.Models.Expense>
+
+@{
+    ViewData["Title"] = "Список расходов";
+}
+
+<h2>Список расходов</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Добавить расход</a>
+</p>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Сумма</th>
+            <th>Категория</th>
+            <th>Дата</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Amount</td>
+                <td>@item.Category</td>
+                <td>@item.Date.ToShortDateString()</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<h4>Фильтрация по категории</h4>
+
+<form method="get" asp-action="Filter">
+
+    <form method="get" action="/Expenses/Filter/Еда">
+        <input type="text" id="categoryInput" placeholder="Введите категорию" class="form-control" />
+        <br />
+        <button type="button" class="btn btn-secondary" onclick="filterCategory()">Фильтровать</button>
+    </form>
+
+    <script>
+        function filterCategory() {
+            var category = document.getElementById("categoryInput").value;
+            window.location.href = "/Expenses/Filter/" + category;
+        }
+    </script>
+</form> 
