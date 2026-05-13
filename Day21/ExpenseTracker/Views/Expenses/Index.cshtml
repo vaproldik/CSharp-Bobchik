@@ -1,0 +1,168 @@
+﻿@model IEnumerable<ExpenseTracker.Models.Expense>
+
+@{
+    ViewBag.Title = "Учёт расходов";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">💰 Учёт личных расходов</h2>
+
+    <!-- ✅ Всплывающее уведомление через TempData/ViewBag -->
+    @if (ViewBag.SuccessMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @ViewBag.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 🔍 Форма фильтрации -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <strong>🔍 Фильтрация расходов</strong>
+        </div>
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+
+                <!-- Фильтр по категории -->
+                <div class="col-md-4">
+                    <label class="form-label">Категория</label>
+                    <select name="filterCategory" class="form-select">
+                        <option value="">— Все категории —</option>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            if (ViewBag.CurrentCategory == cat)
+                            {
+                                <option value="@cat" selected>@cat</option>
+                            }
+                            else
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Дата от -->
+                <div class="col-md-3">
+                    <label class="form-label">Дата от</label>
+                    <input type="date"
+                           name="dateFrom"
+                           class="form-control"
+                           value="@ViewBag.DateFrom" />
+                </div>
+
+                <!-- Дата до -->
+                <div class="col-md-3">
+                    <label class="form-label">Дата до</label>
+                    <input type="date"
+                           name="dateTo"
+                           class="form-control"
+                           value="@ViewBag.DateTo" />
+                </div>
+
+                <!-- Кнопки -->
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Применить
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Сброс
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- 📊 Итоговая сумма -->
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+        <span>
+            <strong>Найдено записей:</strong> @Model.Count()
+        </span>
+        <span>
+            <strong>Итого:</strong>
+            <span class="fs-5 text-danger fw-bold">
+                @ViewBag.TotalAmount.ToString("N2") BYN
+            </span>
+        </span>
+    </div>
+
+    <!-- ➕ Кнопка добавления -->
+    <div class="mb-3">
+        <a asp-action="Create" class="btn btn-success">
+            ➕ Добавить расход
+        </a>
+    </div>
+
+    <!-- 📋 Таблица расходов -->
+    @if (Model.Any())
+    {
+        <table class="table table-striped table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>№</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Сумма (BYN)</th>
+                    <th>Дата</th>
+                    <th class="text-center">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int rowNum = 0;
+                }
+                @foreach (var expense in Model)
+                {
+                    <tr>
+                        <td>@{
+                                rowNum++;
+                            }@rowNum</td>
+                        <td>@expense.Title</td>
+                        <td>
+                            <!-- Ссылка-фильтр по категории -->
+                            <a asp-route="Expenses/Filter/{category}"
+                               asp-route-category="@expense.Category"
+                               class="badge bg-secondary text-decoration-none">
+                                @expense.Category
+                            </a>
+                        </td>
+                        <td class="text-end fw-bold text-danger">
+                            @expense.Amount.ToString("N2") BYN
+                        </td>
+                        <td>@expense.Date.ToString("dd.MM.yyyy")</td>
+                        <td class="text-center">
+                            <a asp-action="Edit"
+                               asp-route-id="@expense.Id"
+                               class="btn btn-sm btn-warning me-1">
+                                ✏️ Изменить
+                            </a>
+                            <a asp-action="Delete"
+                               asp-route-id="@expense.Id"
+                               class="btn btn-sm btn-danger">
+                                🗑️ Удалить
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-warning fw-bold">
+                    <td colspan="3" class="text-end">ИТОГО:</td>
+                    <td class="text-end text-danger">
+                        @ViewBag.TotalAmount.ToString("N2") BYN
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            📭 Расходы не найдены. Попробуйте изменить фильтры или
+            <a asp-action="Create">добавьте первый расход</a>.
+        </div>
+    }
+</div>

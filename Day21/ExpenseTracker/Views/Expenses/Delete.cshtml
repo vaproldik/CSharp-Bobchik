@@ -1,0 +1,65 @@
+﻿@model ExpenseTracker.Models.Expense
+
+@{
+    ViewBag.Title = "Удалить расход";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🗑️ Удалить расход</h4>
+                </div>
+                <div class="card-body">
+
+                    <div class="alert alert-warning">
+                        ⚠️ Вы уверены, что хотите удалить этот расход?
+                        Действие необратимо.
+                    </div>
+
+                    <!-- Информация об удаляемом расходе -->
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Название</th>
+                            <td>@Model.Title</td>
+                        </tr>
+                        <tr>
+                            <th>Категория</th>
+                            <td>@Model.Category</td>
+                        </tr>
+                        <tr>
+                            <th>Сумма</th>
+                            <td class="text-danger fw-bold">
+                                @Model.Amount.ToString("N2") BYN
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Дата</th>
+                            <td>@Model.Date.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                    </table>
+
+                    <!-- Форма подтверждения удаления -->
+                    <form asp-action="Delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger flex-fill">
+                                🗑️ Да, удалить
+                            </button>
+                            <a asp-action="Index"
+                               class="btn btn-outline-secondary flex-fill">
+                                ❌ Отмена
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
