@@ -9,8 +9,8 @@ builder.Services.AddControllersWithViews();
 
 // ── Регистрация DbContext с подключением к SQL Server ─────────
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+    options.UseSqlite(
+    builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
 
@@ -21,6 +21,12 @@ builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddSession();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // ── Настройка конвейера обработки запросов ────────────────────
 if (!app.Environment.IsDevelopment())
